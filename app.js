@@ -60,10 +60,39 @@
   });
 
   // ---------- Contact form ----------
-  contactForm.addEventListener('submit', (e) => {
+  contactForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    showToast('Request sent! We\'ll be in touch within 24 hours.');
-    contactForm.reset();
+
+    // Add loading state
+    const btn = contactForm.querySelector('button[type="submit"]');
+    const originalText = btn.textContent;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    try {
+      const formData = new FormData(contactForm);
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        showToast('Request sent! We\'ll be in touch within 24 hours.');
+        contactForm.reset();
+      } else {
+        showToast('Error sending message. Please try again.');
+        console.error(data.error);
+      }
+    } catch (err) {
+      showToast('Connection error. Please try again later.');
+      console.error(err);
+    } finally {
+      // Restore button state
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
   });
 
   // ---------- Toast ----------
